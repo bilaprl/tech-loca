@@ -382,7 +382,7 @@ export default function LandingPage({ navigateTo, openAuth, onOpenModal }) {
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
                 </span>
                 <span className="text-[10px] font-black text-rose-600 uppercase tracking-[0.15em]">
-                  Trending & Segera Hadir
+                  Akan Berakhir 
                 </span>
               </div>
               <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-extrabold text-dark leading-[1.1]">
