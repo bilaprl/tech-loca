@@ -35,6 +35,8 @@ export default function MyTickets({ onOpenModal }) {
   ]);
 
   const [activeTab, setActiveTab] = useState("active");
+  // STATE BARU: Untuk filter sub-kategori di Tiket Aktif
+  const [activeFilter, setActiveFilter] = useState("all"); // 'all', 'pending', 'confirmed'
 
   // --- CRUD FUNCTIONS ---
 
@@ -103,8 +105,15 @@ export default function MyTickets({ onOpenModal }) {
     return { activeTickets: active, historyTickets: history };
   }, [myTickets]);
 
-  const displayedTickets =
+  // LOGIKA BARU: Terapkan sub-filter jika sedang di tab aktif
+  let displayedTickets =
     activeTab === "active" ? activeTickets : historyTickets;
+
+  if (activeTab === "active" && activeFilter !== "all") {
+    displayedTickets = displayedTickets.filter(
+      (ticket) => ticket.status === activeFilter,
+    );
+  }
 
   return (
     <div className="pt-32 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen">
@@ -122,10 +131,13 @@ export default function MyTickets({ onOpenModal }) {
         </p>
       </div>
 
-      {/* TAB NAVIGATION */}
-      <div className="flex items-center gap-2 mb-10 border-b border-slate-200 pb-px">
+      {/* TAB NAVIGATION MAIN */}
+      <div className="flex items-center gap-2 mb-6 border-b border-slate-200 pb-px">
         <button
-          onClick={() => setActiveTab("active")}
+          onClick={() => {
+            setActiveTab("active");
+            setActiveFilter("all"); // Reset filter saat pindah tab
+          }}
           className={`relative px-6 py-3 text-sm font-bold transition-colors ${
             activeTab === "active"
               ? "text-brand-600"
@@ -151,6 +163,44 @@ export default function MyTickets({ onOpenModal }) {
           )}
         </button>
       </div>
+
+      {/* --- SUB-FILTER (Hanya Muncul di Tiket Aktif) --- */}
+      {activeTab === "active" && activeTickets.length > 0 && (
+        <div className="flex flex-wrap gap-3 mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
+          <button
+            onClick={() => setActiveFilter("all")}
+            className={`px-4 py-2 rounded-xl text-[11px] font-black tracking-widest uppercase transition-all ${
+              activeFilter === "all"
+                ? "bg-brand-600 text-white shadow-md shadow-brand-600/20"
+                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+            }`}
+          >
+            Semua
+          </button>
+          <button
+            onClick={() => setActiveFilter("pending")}
+            className={`px-4 py-2 rounded-xl text-[11px] font-black tracking-widest uppercase transition-all flex items-center gap-1.5 ${
+              activeFilter === "pending"
+                ? "bg-amber-500 text-white shadow-md shadow-amber-500/20"
+                : "bg-amber-50 text-amber-600 hover:bg-amber-100"
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-current opacity-70"></span>
+            Menunggu Pembayaran
+          </button>
+          <button
+            onClick={() => setActiveFilter("confirmed")}
+            className={`px-4 py-2 rounded-xl text-[11px] font-black tracking-widest uppercase transition-all flex items-center gap-1.5 ${
+              activeFilter === "confirmed"
+                ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-current opacity-70"></span>
+            Terkonfirmasi
+          </button>
+        </div>
+      )}
 
       {/* TICKET LIST */}
       {displayedTickets.length > 0 ? (
@@ -344,15 +394,19 @@ export default function MyTickets({ onOpenModal }) {
           </div>
           <h3 className="font-heading text-2xl font-bold text-dark mb-2">
             {activeTab === "active"
-              ? "Belum Ada Tiket Aktif"
+              ? activeFilter !== "all"
+                ? `Tidak ada tiket ${activeFilter === "pending" ? "menunggu pembayaran" : "terkonfirmasi"}`
+                : "Belum Ada Tiket Aktif"
               : "Riwayat Masih Kosong"}
           </h3>
           <p className="text-slate-500 text-sm max-w-sm">
             {activeTab === "active"
-              ? "Kamu belum mengamankan slot untuk acara apapun. Yuk cari event menarik sekarang!"
+              ? activeFilter !== "all"
+                ? "Saat ini kamu tidak memiliki tiket dengan status tersebut."
+                : "Kamu belum mengamankan slot untuk acara apapun. Yuk cari event menarik sekarang!"
               : "Tiket acara yang sudah kamu ikuti atau tanggalnya terlewat akan muncul di sini."}
           </p>
-          {activeTab === "active" && (
+          {activeTab === "active" && activeFilter === "all" && (
             <button
               onClick={() => onOpenModal(null)} // Di page.js ubah ini jadi panggil navigasi ke explore jika null
               className="mt-6 px-6 py-3 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-500 transition-colors"
