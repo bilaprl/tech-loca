@@ -375,6 +375,17 @@ export default function Dashboard() {
                 className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand-500 font-bold text-sm"
               />
 
+              {/* TAMBAHAN: Input Nama Penyelenggara / EO */}
+              <input
+                type="text"
+                placeholder="Nama Penyelenggara (Contoh: BEM Informatika Unsil)"
+                value={formData.eo || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, eo: e.target.value })
+                }
+                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand-500 font-bold text-sm"
+              />
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 ml-2 uppercase">
@@ -434,6 +445,21 @@ export default function Dashboard() {
                     className="w-full pl-12 p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs outline-none focus:border-brand-500"
                   />
                 </div>
+
+                <div className="relative group">
+                  <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                    add_location_alt
+                  </span>
+                  <input
+                    type="url"
+                    placeholder="Link Google Maps (URL)"
+                    value={formData.maps_url || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, maps_url: e.target.value })
+                    }
+                    className="w-full pl-12 p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs outline-none focus:border-brand-500"
+                  />
+                </div>
               </div>
 
               <div
@@ -442,8 +468,8 @@ export default function Dashboard() {
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
                 className={`relative p-8 border-2 border-dashed rounded-[2rem] text-center transition-all duration-300
-                    ${dragActive ? "border-brand-500 bg-brand-50" : "border-slate-200 hover:border-brand-300"}
-                    ${formData.img ? "bg-slate-900 border-none p-0 h-48 overflow-hidden" : ""}`}
+                  ${dragActive ? "border-brand-500 bg-brand-50" : "border-slate-200 hover:border-brand-300"}
+                  ${formData.img ? "bg-slate-900 border-none p-0 h-48 overflow-hidden" : ""}`}
               >
                 {formData.img ? (
                   <>

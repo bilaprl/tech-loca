@@ -1,6 +1,9 @@
 "use client";
 import { useState, useMemo } from "react";
 import { eventsData } from "@/data/events";
+import { QRCodeSVG } from "qrcode.react";
+import { toPng } from "html-to-image";
+import jsPDF from "jspdf";
 
 // Helper untuk mengubah string tanggal Indonesia ke Date object
 const parseIndonesianDate = (dateStr) => {
@@ -29,12 +32,32 @@ export default function MyTickets({ onOpenModal }) {
   // Simulasi Database Tiket Lokal (CRUD State)
   // Status: 'pending' (belum bayar), 'confirmed' (lunas), 'attended' (sudah discan EO)
   const [myTickets, setMyTickets] = useState([
-    { id: 101, eventId: 1, status: "confirmed", bookingDate: "08 Mei 2026" },
-    { id: 102, eventId: 2, status: "pending", bookingDate: "08 Mei 2026" },
-    { id: 103, eventId: 4, status: "confirmed", bookingDate: "07 Mei 2026" },
+    {
+      id: 101,
+      eventId: 1,
+      status: "confirmed",
+      bookingDate: "08 Mei 2026",
+      qrData: "TL-CONF-101-ABC",
+    },
+    {
+      id: 102,
+      eventId: 2,
+      status: "pending",
+      bookingDate: "08 Mei 2026",
+      qrData: "",
+    },
+    {
+      id: 103,
+      eventId: 4,
+      status: "confirmed",
+      bookingDate: "07 Mei 2026",
+      qrData: "TL-CONF-103-XYZ",
+    },
   ]);
 
   const [activeTab, setActiveTab] = useState("active");
+  // STATE BARU: Untuk filter sub-kategori di Tiket Aktif
+  const [activeFilter, setActiveFilter] = useState("all"); // 'all', 'pending', 'confirmed'
 
   // --- CRUD FUNCTIONS ---
 
@@ -65,10 +88,48 @@ export default function MyTickets({ onOpenModal }) {
     );
   };
 
-  // Unduh PDF (Hanya simulasi)
-  const handleDownloadPDF = (e, eventTitle) => {
+  // Unduh PDF Nyata (Screenshot DOM Menggunakan html-to-image)
+  const handleDownloadPDF = async (e, eventTitle, ticketId) => {
     e.stopPropagation();
-    alert(`Mengunduh E-Ticket PDF untuk acara: ${eventTitle}`);
+
+    const ticketElement = document.getElementById(`ticket-card-${ticketId}`);
+    if (!ticketElement) return;
+
+    try {
+      const btn = e.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<span class="material-icons-round text-sm animate-spin">sync</span> Memproses...`;
+
+      // Ekstrak dimensi asli dari elemen tiket
+      const width = ticketElement.offsetWidth;
+      const height = ticketElement.offsetHeight;
+
+      // Konversi DOM menjadi Data URL PNG
+      const dataUrl = await toPng(ticketElement, {
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+        pixelRatio: 2, // Resolusi tinggi (HD)
+        fontEmbedCSS: "", // <--- SOLUSI ERROR CORS: Bypass pembacaan CSS font eksternal
+      });
+
+      // Buat file PDF berdasarkan ukuran elemen
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "px",
+        format: [width, height],
+      });
+
+      // Masukkan gambar ke PDF dan simpan
+      pdf.addImage(dataUrl, "PNG", 0, 0, width, height);
+      pdf.save(`E-Ticket_TechLoca_${eventTitle.replace(/\s+/g, "_")}.pdf`);
+
+      btn.innerHTML = originalText;
+    } catch (error) {
+      console.error("Gagal membuat PDF:", error);
+      alert(
+        "Maaf, terjadi kendala teknis saat merender PDF. Pastikan koneksi stabil.",
+      );
+    }
   };
 
   // --- LOGIKA FILTER (READ & AUTO-UPDATE EXPIRED) ---
@@ -103,8 +164,15 @@ export default function MyTickets({ onOpenModal }) {
     return { activeTickets: active, historyTickets: history };
   }, [myTickets]);
 
-  const displayedTickets =
+  // LOGIKA BARU: Terapkan sub-filter jika sedang di tab aktif
+  let displayedTickets =
     activeTab === "active" ? activeTickets : historyTickets;
+
+  if (activeTab === "active" && activeFilter !== "all") {
+    displayedTickets = displayedTickets.filter(
+      (ticket) => ticket.status === activeFilter,
+    );
+  }
 
   return (
     <div className="pt-32 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen">
@@ -122,10 +190,13 @@ export default function MyTickets({ onOpenModal }) {
         </p>
       </div>
 
-      {/* TAB NAVIGATION */}
-      <div className="flex items-center gap-2 mb-10 border-b border-slate-200 pb-px">
+      {/* TAB NAVIGATION MAIN */}
+      <div className="flex items-center gap-2 mb-6 border-b border-slate-200 pb-px">
         <button
-          onClick={() => setActiveTab("active")}
+          onClick={() => {
+            setActiveTab("active");
+            setActiveFilter("all"); // Reset filter saat pindah tab
+          }}
           className={`relative px-6 py-3 text-sm font-bold transition-colors ${
             activeTab === "active"
               ? "text-brand-600"
@@ -134,7 +205,7 @@ export default function MyTickets({ onOpenModal }) {
         >
           Tiket Aktif ({activeTickets.length})
           {activeTab === "active" && (
-            <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-600 rounded-t-full"></span>
+            <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#4F46E5] rounded-t-full"></span>
           )}
         </button>
         <button
@@ -152,6 +223,44 @@ export default function MyTickets({ onOpenModal }) {
         </button>
       </div>
 
+      {/* --- SUB-FILTER (Hanya Muncul di Tiket Aktif) --- */}
+      {activeTab === "active" && activeTickets.length > 0 && (
+        <div className="flex flex-wrap gap-3 mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
+          <button
+            onClick={() => setActiveFilter("all")}
+            className={`px-4 py-2 rounded-xl text-[11px] font-black tracking-widest uppercase transition-all ${
+              activeFilter === "all"
+                ? "bg-[#4F46E5] text-white shadow-md shadow-brand-600/20"
+                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+            }`}
+          >
+            Semua
+          </button>
+          <button
+            onClick={() => setActiveFilter("pending")}
+            className={`px-4 py-2 rounded-xl text-[11px] font-black tracking-widest uppercase transition-all flex items-center gap-1.5 ${
+              activeFilter === "pending"
+                ? "bg-amber-500 text-white shadow-md shadow-amber-500/20"
+                : "bg-amber-50 text-amber-600 hover:bg-amber-100"
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-current opacity-70"></span>
+            Menunggu Pembayaran
+          </button>
+          <button
+            onClick={() => setActiveFilter("confirmed")}
+            className={`px-4 py-2 rounded-xl text-[11px] font-black tracking-widest uppercase transition-all flex items-center gap-1.5 ${
+              activeFilter === "confirmed"
+                ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-current opacity-70"></span>
+            Terkonfirmasi
+          </button>
+        </div>
+      )}
+
       {/* TICKET LIST */}
       {displayedTickets.length > 0 ? (
         <div className="flex flex-col gap-8">
@@ -164,6 +273,7 @@ export default function MyTickets({ onOpenModal }) {
             return (
               <div
                 key={ticket.id}
+                id={`ticket-card-${ticket.id}`} // <--- ID UNTUK HTML-TO-IMAGE
                 onClick={() => onOpenModal(ev)}
                 className={`bg-white rounded-[2rem] border border-slate-200 flex flex-col lg:flex-row overflow-hidden transition-all duration-300 cursor-pointer relative group
                   ${activeTab === "active" ? "hover:shadow-2xl hover:-translate-y-1 hover:border-brand-200" : "opacity-80 grayscale-[20%]"}`}
@@ -271,7 +381,7 @@ export default function MyTickets({ onOpenModal }) {
                       </p>
                       <button
                         onClick={(e) => handleContinuePayment(e, ev.title)}
-                        className="w-full bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 mb-3"
+                        className="w-full bg-[#4F46E5] hover:bg-brand-500 text-white text-xs font-bold py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 mb-3"
                       >
                         <span className="material-icons-round text-sm">
                           chat
@@ -300,18 +410,25 @@ export default function MyTickets({ onOpenModal }) {
                       </p>
                     </div>
                   ) : (
-                    // AKSI: JIKA CONFIRMED (Siap digunakan)
+                    // AKSI: JIKA CONFIRMED (Siap digunakan - TAMPILKAN QR CODE)
                     <div className="text-center w-full">
-                      <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 mb-3 inline-block">
-                        <span className="material-icons-round text-[5rem] text-dark">
-                          qr_code_2
-                        </span>
+                      <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 mb-3 inline-block">
+                        {/* INI ADALAH KOMPONEN QR CODE NYA */}
+                        <QRCodeSVG
+                          value={ticket.qrData}
+                          size={96}
+                          bgColor={"#ffffff"}
+                          fgColor={"#0F172A"}
+                          level={"H"}
+                        />
                       </div>
                       <p className="text-[10px] font-bold text-brand-600 uppercase tracking-widest text-center mb-4">
                         Scan Masuk Area
                       </p>
                       <button
-                        onClick={(e) => handleDownloadPDF(e, ev.title)}
+                        onClick={(e) =>
+                          handleDownloadPDF(e, ev.title, ticket.id)
+                        } // <--- PARAMETER ID
                         className="w-full bg-dark hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 mb-2"
                       >
                         <span className="material-icons-round text-sm">
@@ -344,18 +461,22 @@ export default function MyTickets({ onOpenModal }) {
           </div>
           <h3 className="font-heading text-2xl font-bold text-dark mb-2">
             {activeTab === "active"
-              ? "Belum Ada Tiket Aktif"
+              ? activeFilter !== "all"
+                ? `Tidak ada tiket ${activeFilter === "pending" ? "menunggu pembayaran" : "terkonfirmasi"}`
+                : "Belum Ada Tiket Aktif"
               : "Riwayat Masih Kosong"}
           </h3>
           <p className="text-slate-500 text-sm max-w-sm">
             {activeTab === "active"
-              ? "Kamu belum mengamankan slot untuk acara apapun. Yuk cari event menarik sekarang!"
+              ? activeFilter !== "all"
+                ? "Saat ini kamu tidak memiliki tiket dengan status tersebut."
+                : "Kamu belum mengamankan slot untuk acara apapun. Yuk cari event menarik sekarang!"
               : "Tiket acara yang sudah kamu ikuti atau tanggalnya terlewat akan muncul di sini."}
           </p>
-          {activeTab === "active" && (
+          {activeTab === "active" && activeFilter === "all" && (
             <button
               onClick={() => onOpenModal(null)} // Di page.js ubah ini jadi panggil navigasi ke explore jika null
-              className="mt-6 px-6 py-3 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-500 transition-colors"
+              className="mt-6 px-6 py-3 bg-[#4F46E5] text-white font-bold rounded-xl hover:bg-brand-500 transition-colors"
             >
               Cari Workshop
             </button>
