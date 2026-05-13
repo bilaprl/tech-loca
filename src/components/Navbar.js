@@ -1,214 +1,407 @@
 "use client";
+
 import { useState, useEffect } from "react";
 
+
+
 export default function Navbar({
-  role, // Role dari parent (null, "user", atau "eo")
-  user, // Data user (nama, foto) dari backend
+
+  role,
+
   navigateTo,
+
   logout,
+
   activePage,
+
   openAuth,
+
 }) {
+
   const [isScrolled, setIsScrolled] = useState(false);
 
+
+
   useEffect(() => {
+
     const handleScroll = () => {
+
       setIsScrolled(window.scrollY > 20);
+
     };
+
     window.addEventListener("scroll", handleScroll);
+
     return () => window.removeEventListener("scroll", handleScroll);
+
   }, []);
 
-  // --- 1. NORMALISASI ROLE ---
-  const currentRole = role ? String(role).toLowerCase().trim() : null;
+
+
+  // --- NORMALISASI ROLE (Anti-Typo) ---
+
+  const currentRole = role ? role.toLowerCase() : null;
+
+  // Cek apakah dia Admin
 
   const isAdmin = currentRole === "eo";
-  const isUser = currentRole && currentRole !== "eo";
-  const isLoggedIn = Boolean(currentRole);
 
-  // --- 2. LOGIKA NAVIGASI PUSAT ---
+  // Cek apakah dia User (Sudah login tapi bukan Admin)
+
+  const isUser = role && currentRole !== "eo";
+
+
+
+  // --- LOGIKA NAVIGASI PUSAT ---
+
   const navItems = [
+
+    // Menu Admin: Muncul jika dia EO
+
     ...(isAdmin
+
       ? [
+
           {
+
             id: "dashboard",
+
             label: "Dashboard Admin",
+
             icon: "admin_panel_settings",
+
           },
+
         ]
+
       : []),
+
+
 
     { id: "explore", label: "Eksplorasi", icon: "explore" },
 
+
+
+    // Menu User: Muncul jika dia LOGIN dan BUKAN ADMIN
+
     ...(isUser
+
       ? [
+
           { id: "wishlist", label: "Wishlist", icon: "favorite" },
+
           { id: "tickets", label: "Tiket Saya", icon: "local_activity" },
+
         ]
+
       : []),
 
+
+
+    // FAQ: Muncul untuk User atau Tamu (Admin tidak perlu FAQ)
+
     ...(!isAdmin ? [{ id: "faq", label: "FAQ", icon: "live_help" }] : []),
+
   ];
 
+
+
   return (
+
     <header
-      className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${
-        isScrolled ? "pt-4" : "pt-0"
-      }`}
+
+      className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${isScrolled ? "pt-4" : "pt-0"}`}
+
     >
+
       <nav
+
         className={`mx-auto transition-all duration-500 flex items-center ${
+
           isScrolled
+
             ? "max-w-5xl bg-white/80 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.05)] border border-white/20 rounded-3xl h-16 px-8"
+
             : "max-w-full bg-white border-b border-slate-100 h-20 px-10"
+
         }`}
+
       >
+
         <div className="w-full flex justify-between items-center">
-          {/* --- LOGO AREA --- */}
+
+          {/* LOGO AREA */}
+
           <div
+
             className="flex items-center gap-3 cursor-pointer group"
+
             onClick={() => navigateTo(isAdmin ? "dashboard" : "home")}
+
           >
+
             <div
+
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:rotate-12 duration-300 shadow-lg 
+
               ${isAdmin ? "bg-dark shadow-dark/30" : "bg-brand-600 shadow-brand-500/30"}`}
+
             >
+
               <img
+
                 src="/logo.png"
+
                 alt="Logo"
+
                 className="w-10 h-10 object-contain rounded-2xl"
+
               />
+
             </div>
+
             <div className="flex flex-col text-left">
+
               <span className="font-heading font-black text-xl tracking-tighter text-dark uppercase leading-none">
+
                 TechLoca
+
               </span>
+
               <span
-                className={`text-[9px] font-bold tracking-[0.2em] uppercase ${
-                  isAdmin ? "text-rose-500" : "text-brand-500"
-                }`}
+
+                className={`text-[9px] font-bold tracking-[0.2em] uppercase ${isAdmin ? "text-rose-500" : "text-brand-500"}`}
+
               >
+
                 {isAdmin ? "TechLoca Admin" : "Ecosystem"}
+
               </span>
+
             </div>
+
           </div>
 
-          {/* --- NAV LINKS PUSAT --- */}
+
+
+          {/* NAV LINKS PUSAT */}
+
           <div className="hidden md:flex items-center bg-slate-100/50 p-1.5 rounded-2xl gap-1">
+
             {navItems.map((item) => (
+
               <button
+
                 key={item.id}
+
                 onClick={() => navigateTo(item.id)}
+
                 className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-extrabold transition-all duration-300 ${
+
                   activePage === item.id
+
                     ? "bg-white text-brand-600 shadow-sm"
+
                     : "text-slate-500 hover:text-dark hover:bg-white/40"
+
                 }`}
+
               >
+
                 <span
-                  className={`material-icons-round text-lg ${
-                    activePage === item.id ? "text-brand-600" : "text-slate-400"
-                  }`}
+
+                  className={`material-icons-round text-lg ${activePage === item.id ? "text-brand-600" : "text-slate-400"}`}
+
                 >
+
                   {item.icon}
+
                 </span>
+
                 {item.label}
+
               </button>
+
             ))}
+
           </div>
 
-          {/* --- ACTION BUTTONS (KANAN) --- */}
+
+
+          {/* ACTION BUTTONS (KANAN) */}
+
           <div className="flex items-center gap-4">
-            {isLoggedIn ? (
+
+            {role ? (
+
               <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+
                 <div className="hidden lg:flex flex-col items-end mr-1 text-right">
+
                   <span className="text-[11px] font-bold text-dark leading-none">
-                    {user?.name ||
-                      (isAdmin ? "TechLoca Admin" : "Nabila Aprilianti")}
+
+                    {isAdmin ? "TechLoca Admin" : "Nabila Aprilianti"}
+
                   </span>
+
                   <span
-                    className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 px-1.5 py-0.5 rounded ${
-                      isAdmin
-                        ? "bg-rose-100 text-rose-600"
-                        : "bg-slate-100 text-slate-400"
-                    }`}
+
+                    className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 px-1.5 py-0.5 rounded ${isAdmin ? "bg-rose-100 text-rose-600" : "bg-slate-100 text-slate-400"}`}
+
                   >
+
                     {isAdmin ? "Event Organizer" : "Member"}
+
                   </span>
+
                 </div>
+
+
+
+                {/* Avatar & Dropdown */}
 
                 <div className="relative group cursor-pointer py-2">
+
                   <div
-                    className={`w-10 h-10 rounded-full border-2 p-0.5 transition-transform group-hover:scale-105 ${
-                      isAdmin ? "border-dark" : "border-brand-500"
-                    }`}
+
+                    className={`w-10 h-10 rounded-full border-2 p-0.5 transition-transform group-hover:scale-105 ${isAdmin ? "border-dark" : "border-brand-500"}`}
+
                   >
+
                     {isAdmin ? (
+
                       <div className="w-full h-full bg-dark rounded-full flex items-center justify-center text-white">
+
                         <span className="material-icons-round text-sm">
+
                           admin_panel_settings
+
                         </span>
+
                       </div>
+
                     ) : (
+
                       <img
-                        src={
-                          user?.image || "https://i.pravatar.cc/150?u=nabila"
-                        }
+
+                        src="https://i.pravatar.cc/150?u=nabila"
+
                         className="w-full h-full rounded-full object-cover"
+
                         alt="Profile"
+
                       />
+
                     )}
+
                   </div>
+
+
+
+                  {/* Dropdown Menu */}
 
                   <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-slate-100 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-right group-hover:translate-y-0 translate-y-2">
+
+                    {/* MENU DROPDOWN: HANYA UNTUK USER (NON-ADMIN) */}
+
                     {isUser && (
+
                       <>
+
                         <button
+
                           onClick={() => navigateTo("profile")}
+
                           className="w-full px-4 py-2.5 text-left text-slate-600 hover:bg-slate-50 hover:text-brand-600 rounded-xl text-xs font-bold flex items-center gap-3 transition-colors"
+
                         >
+
                           <span className="material-icons-round text-lg">
+
                             account_circle
-                          </span>
+
+                          </span>{" "}
+
                           Profil
+
                         </button>
+
                         <button
+
                           onClick={() => navigateTo("certificates")}
+
                           className="w-full px-4 py-2.5 text-left text-slate-600 hover:bg-slate-50 hover:text-amber-500 rounded-xl text-xs font-bold flex items-center gap-3 transition-colors"
+
                         >
+
                           <span className="material-icons-round text-lg">
+
                             workspace_premium
-                          </span>
+
+                          </span>{" "}
+
                           Sertifikat
+
                         </button>
+
                         <div className="my-1 border-t border-slate-100"></div>
+
                       </>
+
                     )}
 
+
+
                     <button
+
                       onClick={logout}
+
                       className="w-full px-4 py-2.5 text-left text-rose-500 hover:bg-rose-50 rounded-xl text-xs font-bold flex items-center gap-3 transition-colors"
+
                     >
+
                       <span className="material-icons-round text-lg">
+
                         logout
-                      </span>
+
+                      </span>{" "}
+
                       Keluar
+
                     </button>
+
                   </div>
+
                 </div>
+
               </div>
+
             ) : (
+
               <button
+
                 onClick={openAuth}
-                className="px-7 py-2.5 rounded-xl bg-dark text-white font-bold text-sm shadow-md flex items-center gap-2 hover:bg-brand-700 transition-colors"
+
+                className="px-7 py-2.5 rounded-xl bg-dark text-white font-bold text-sm shadow-md flex items-center gap-2"
+
               >
-                Masuk
+
+                Masuk{" "}
+
                 <span className="material-icons-round text-sm">login</span>
+
               </button>
+
             )}
+
           </div>
+
         </div>
+
       </nav>
+
     </header>
+
   );
+
 }
