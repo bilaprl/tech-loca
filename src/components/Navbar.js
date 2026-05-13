@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 
 export default function Navbar({
-  role,
+  role, // Role dari parent (null, "user", atau "eo")
+  user, // Data user (nama, foto) dari backend
   navigateTo,
   logout,
   activePage,
@@ -18,16 +19,15 @@ export default function Navbar({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // --- NORMALISASI ROLE (Anti-Typo) ---
-  const currentRole = role ? role.toLowerCase() : null;
-  // Cek apakah dia Admin
-  const isAdmin = currentRole === "eo";
-  // Cek apakah dia User (Sudah login tapi bukan Admin)
-  const isUser = role && currentRole !== "eo";
+  // --- 1. NORMALISASI ROLE ---
+  const currentRole = role ? String(role).toLowerCase().trim() : null;
 
-  // --- LOGIKA NAVIGASI PUSAT ---
+  const isAdmin = currentRole === "eo";
+  const isUser = currentRole && currentRole !== "eo";
+  const isLoggedIn = Boolean(currentRole);
+
+  // --- 2. LOGIKA NAVIGASI PUSAT ---
   const navItems = [
-    // Menu Admin: Muncul jika dia EO
     ...(isAdmin
       ? [
           {
@@ -40,7 +40,6 @@ export default function Navbar({
 
     { id: "explore", label: "Eksplorasi", icon: "explore" },
 
-    // Menu User: Muncul jika dia LOGIN dan BUKAN ADMIN
     ...(isUser
       ? [
           { id: "wishlist", label: "Wishlist", icon: "favorite" },
@@ -48,13 +47,14 @@ export default function Navbar({
         ]
       : []),
 
-    // FAQ: Muncul untuk User atau Tamu (Admin tidak perlu FAQ)
     ...(!isAdmin ? [{ id: "faq", label: "FAQ", icon: "live_help" }] : []),
   ];
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${isScrolled ? "pt-4" : "pt-0"}`}
+      className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${
+        isScrolled ? "pt-4" : "pt-0"
+      }`}
     >
       <nav
         className={`mx-auto transition-all duration-500 flex items-center ${
@@ -64,7 +64,7 @@ export default function Navbar({
         }`}
       >
         <div className="w-full flex justify-between items-center">
-          {/* LOGO AREA */}
+          {/* --- LOGO AREA --- */}
           <div
             className="flex items-center gap-3 cursor-pointer group"
             onClick={() => navigateTo(isAdmin ? "dashboard" : "home")}
@@ -84,14 +84,16 @@ export default function Navbar({
                 TechLoca
               </span>
               <span
-                className={`text-[9px] font-bold tracking-[0.2em] uppercase ${isAdmin ? "text-rose-500" : "text-brand-500"}`}
+                className={`text-[9px] font-bold tracking-[0.2em] uppercase ${
+                  isAdmin ? "text-rose-500" : "text-brand-500"
+                }`}
               >
                 {isAdmin ? "TechLoca Admin" : "Ecosystem"}
               </span>
             </div>
           </div>
 
-          {/* NAV LINKS PUSAT */}
+          {/* --- NAV LINKS PUSAT --- */}
           <div className="hidden md:flex items-center bg-slate-100/50 p-1.5 rounded-2xl gap-1">
             {navItems.map((item) => (
               <button
@@ -104,7 +106,9 @@ export default function Navbar({
                 }`}
               >
                 <span
-                  className={`material-icons-round text-lg ${activePage === item.id ? "text-brand-600" : "text-slate-400"}`}
+                  className={`material-icons-round text-lg ${
+                    activePage === item.id ? "text-brand-600" : "text-slate-400"
+                  }`}
                 >
                   {item.icon}
                 </span>
@@ -113,25 +117,31 @@ export default function Navbar({
             ))}
           </div>
 
-          {/* ACTION BUTTONS (KANAN) */}
+          {/* --- ACTION BUTTONS (KANAN) --- */}
           <div className="flex items-center gap-4">
-            {role ? (
+            {isLoggedIn ? (
               <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                 <div className="hidden lg:flex flex-col items-end mr-1 text-right">
                   <span className="text-[11px] font-bold text-dark leading-none">
-                    {isAdmin ? "TechLoca Admin" : "Nabila Aprilianti"}
+                    {user?.name ||
+                      (isAdmin ? "TechLoca Admin" : "Nabila Aprilianti")}
                   </span>
                   <span
-                    className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 px-1.5 py-0.5 rounded ${isAdmin ? "bg-rose-100 text-rose-600" : "bg-slate-100 text-slate-400"}`}
+                    className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 px-1.5 py-0.5 rounded ${
+                      isAdmin
+                        ? "bg-rose-100 text-rose-600"
+                        : "bg-slate-100 text-slate-400"
+                    }`}
                   >
                     {isAdmin ? "Event Organizer" : "Member"}
                   </span>
                 </div>
 
-                {/* Avatar & Dropdown */}
                 <div className="relative group cursor-pointer py-2">
                   <div
-                    className={`w-10 h-10 rounded-full border-2 p-0.5 transition-transform group-hover:scale-105 ${isAdmin ? "border-dark" : "border-brand-500"}`}
+                    className={`w-10 h-10 rounded-full border-2 p-0.5 transition-transform group-hover:scale-105 ${
+                      isAdmin ? "border-dark" : "border-brand-500"
+                    }`}
                   >
                     {isAdmin ? (
                       <div className="w-full h-full bg-dark rounded-full flex items-center justify-center text-white">
@@ -141,16 +151,16 @@ export default function Navbar({
                       </div>
                     ) : (
                       <img
-                        src="https://i.pravatar.cc/150?u=nabila"
+                        src={
+                          user?.image || "https://i.pravatar.cc/150?u=nabila"
+                        }
                         className="w-full h-full rounded-full object-cover"
                         alt="Profile"
                       />
                     )}
                   </div>
 
-                  {/* Dropdown Menu */}
                   <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-slate-100 p-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-right group-hover:translate-y-0 translate-y-2">
-                    {/* MENU DROPDOWN: HANYA UNTUK USER (NON-ADMIN) */}
                     {isUser && (
                       <>
                         <button
@@ -159,7 +169,7 @@ export default function Navbar({
                         >
                           <span className="material-icons-round text-lg">
                             account_circle
-                          </span>{" "}
+                          </span>
                           Profil
                         </button>
                         <button
@@ -168,7 +178,7 @@ export default function Navbar({
                         >
                           <span className="material-icons-round text-lg">
                             workspace_premium
-                          </span>{" "}
+                          </span>
                           Sertifikat
                         </button>
                         <div className="my-1 border-t border-slate-100"></div>
@@ -181,7 +191,7 @@ export default function Navbar({
                     >
                       <span className="material-icons-round text-lg">
                         logout
-                      </span>{" "}
+                      </span>
                       Keluar
                     </button>
                   </div>
@@ -190,9 +200,9 @@ export default function Navbar({
             ) : (
               <button
                 onClick={openAuth}
-                className="px-7 py-2.5 rounded-xl bg-dark text-white font-bold text-sm shadow-md flex items-center gap-2"
+                className="px-7 py-2.5 rounded-xl bg-dark text-white font-bold text-sm shadow-md flex items-center gap-2 hover:bg-brand-700 transition-colors"
               >
-                Masuk{" "}
+                Masuk
                 <span className="material-icons-round text-sm">login</span>
               </button>
             )}
