@@ -66,14 +66,31 @@ export default function GlobalModal({ event, onClose }) {
               <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-dark/20 to-transparent"></div>
             </>
           ) : (
-            <div className="w-full h-full">
+            <div className="w-full h-full relative">
+              {/* Iframe Peta Dinamis berdasarkan nama tempat */}
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.2403780365773!2d108.2199516!3d-7.326848!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6f575c328dbbd1%3A0xc6222b467ec6cc76!2sSiliwangi%20University!5e0!3m2!1sen!2sid!4v1699999999999"
+                src={`https://maps.google.com/maps?q=${encodeURIComponent((event.venue || "") + " " + (event.location || ""))}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
                 loading="lazy"
+                allowFullScreen=""
               ></iframe>
+
+              {/* Tombol Rute yang mengarah ke inputan maps_url dari Admin */}
+              {event.maps_url && (
+                <a
+                  href={event.maps_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-4 right-16 z-20 bg-white/90 backdrop-blur-md px-3 py-2 rounded-xl text-[10px] font-black text-brand-600 shadow-lg uppercase tracking-widest flex items-center gap-1.5 hover:bg-brand-50 hover:scale-105 transition-all"
+                >
+                  <span className="material-icons-round text-sm">
+                    directions
+                  </span>
+                  Rute
+                </a>
+              )}
             </div>
           )}
 
@@ -85,7 +102,7 @@ export default function GlobalModal({ event, onClose }) {
           {/* Tombol Toggle Peta Kiri Bawah */}
           <button
             onClick={() => setShowMap(!showMap)}
-            className="absolute bottom-6 left-6 px-4 py-2.5 bg-white/20 hover:bg-white/30 border border-white/30 backdrop-blur-md text-white rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-lg"
+            className="absolute bottom-6 left-6 px-4 py-2.5 bg-white/20 hover:bg-white/30 border border-white/30 backdrop-blur-md text-white rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-lg z-20"
           >
             <span className="material-icons-round text-base">
               {showMap ? "image" : "map"}
