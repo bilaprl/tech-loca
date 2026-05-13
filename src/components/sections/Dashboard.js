@@ -445,7 +445,7 @@ export default function Dashboard() {
                     className="w-full pl-12 p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs outline-none focus:border-brand-500"
                   />
                 </div>
-                
+
                 <div className="relative group">
                   <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
                     add_location_alt
