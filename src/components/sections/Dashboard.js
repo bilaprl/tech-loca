@@ -346,7 +346,7 @@ export default function Dashboard() {
         </div>
       )}
 
-       {/* --- 2. MODUL MANAJEMEN EVENT (FULL CRUD) --- */}
+      {/* --- 2. MODUL MANAJEMEN EVENT (FULL CRUD) --- */}
       {activeTab === "events" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in slide-in-from-bottom-4 duration-500">
           <div className="lg:col-span-5 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl h-fit sticky top-32">
@@ -371,6 +371,17 @@ export default function Dashboard() {
                 value={formData.title}
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
+                }
+                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand-500 font-bold text-sm"
+              />
+
+              {/* TAMBAHAN: Input Nama Penyelenggara / EO */}
+              <input
+                type="text"
+                placeholder="Nama Penyelenggara (Contoh: BEM Informatika Unsil)"
+                value={formData.eo || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, eo: e.target.value })
                 }
                 className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-brand-500 font-bold text-sm"
               />
@@ -435,7 +446,6 @@ export default function Dashboard() {
                   />
                 </div>
                 
-                {/* TAMBAHAN: Input URL Google Maps */}
                 <div className="relative group">
                   <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
                     add_location_alt
@@ -458,8 +468,8 @@ export default function Dashboard() {
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
                 className={`relative p-8 border-2 border-dashed rounded-[2rem] text-center transition-all duration-300
-                    ${dragActive ? "border-brand-500 bg-brand-50" : "border-slate-200 hover:border-brand-300"}
-                    ${formData.img ? "bg-slate-900 border-none p-0 h-48 overflow-hidden" : ""}`}
+                  ${dragActive ? "border-brand-500 bg-brand-50" : "border-slate-200 hover:border-brand-300"}
+                  ${formData.img ? "bg-slate-900 border-none p-0 h-48 overflow-hidden" : ""}`}
               >
                 {formData.img ? (
                   <>
@@ -586,7 +596,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
 
       {/* --- 3. MODUL VERIFIKASI PEMBAYARAN --- */}
       {activeTab === "payments" && (
