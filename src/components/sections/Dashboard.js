@@ -346,7 +346,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* --- 2. MODUL MANAJEMEN EVENT (FULL CRUD) --- */}
+       {/* --- 2. MODUL MANAJEMEN EVENT (FULL CRUD) --- */}
       {activeTab === "events" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in slide-in-from-bottom-4 duration-500">
           <div className="lg:col-span-5 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl h-fit sticky top-32">
@@ -430,6 +430,22 @@ export default function Dashboard() {
                     value={formData.venue}
                     onChange={(e) =>
                       setFormData({ ...formData, venue: e.target.value })
+                    }
+                    className="w-full pl-12 p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs outline-none focus:border-brand-500"
+                  />
+                </div>
+                
+                {/* TAMBAHAN: Input URL Google Maps */}
+                <div className="relative group">
+                  <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                    add_location_alt
+                  </span>
+                  <input
+                    type="url"
+                    placeholder="Link Google Maps (URL)"
+                    value={formData.maps_url || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, maps_url: e.target.value })
                     }
                     className="w-full pl-12 p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs outline-none focus:border-brand-500"
                   />
@@ -570,6 +586,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
 
       {/* --- 3. MODUL VERIFIKASI PEMBAYARAN --- */}
       {activeTab === "payments" && (
