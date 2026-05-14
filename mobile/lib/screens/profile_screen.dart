@@ -6,6 +6,7 @@ import 'edit_profile_screen.dart';
 import 'faq_screen.dart';
 import 'about_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
+import 'notifications_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -109,7 +110,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
 
-            _buildProfileMenu(Icons.notifications_none_rounded, "Notifikasi"),
+            _buildProfileMenu(
+              Icons.notifications_none_rounded,
+              "Notifikasi",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationsScreen(),
+                  ),
+                );
+              },
+            ),
 
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
