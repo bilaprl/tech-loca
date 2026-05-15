@@ -158,6 +158,7 @@ class _MenuCertificateAdminState extends State<MenuCertificateAdmin> {
                                 title: "Sertifikat Terbit! 🎓",
                                 body:
                                     "Sertifikat untuk ${p['nama']} telah dikirim ke email.",
+                                type: "cert",
                               );
                               // -----------------------------------------------------
 

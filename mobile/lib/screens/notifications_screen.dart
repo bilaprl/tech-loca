@@ -1,38 +1,12 @@
 import 'package:flutter/material.dart';
+// 1. TAMBAHKAN IMPORT HIVE
+import 'package:hive_flutter/hive_flutter.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Data dummy notifikasi untuk simulasi
-    final List<Map<String, String>> notifications = [
-      {
-        "title": "Sertifikat Terbit! 🎓",
-        "desc": "Sertifikat UI/UX Masterclass kamu sudah tersedia.",
-        "time": "2 menit yang lalu",
-        "type": "cert",
-      },
-      {
-        "title": "Pembayaran Berhasil ✅",
-        "desc": "Tiket Web Dev Unsil sudah aktif di menu Tiket.",
-        "time": "1 jam yang lalu",
-        "type": "ticket",
-      },
-      {
-        "title": "Reminder Acara ⏰",
-        "desc": "Event UI/UX dimulai besok jam 09:00 WIB.",
-        "time": "5 jam yang lalu",
-        "type": "event",
-      },
-      {
-        "title": "Selamat Datang! 👋",
-        "desc": "Terima kasih telah bergabung di TechLoca.",
-        "time": "1 hari yang lalu",
-        "type": "info",
-      },
-    ];
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -45,17 +19,29 @@ class NotificationsScreen extends StatelessWidget {
         elevation: 0,
         foregroundColor: Colors.black,
       ),
-      body: notifications.isEmpty
-          ? _buildEmptyState()
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: notifications.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final item = notifications[index];
-                return _buildNotificationCard(item);
-              },
-            ),
+      // 2. GUNAKAN ValueListenableBuilder UNTUK MEMBACA DATA DARI HIVE
+      body: ValueListenableBuilder(
+        valueListenable: Hive.box("notificationHistory").listenable(),
+        builder: (context, Box box, _) {
+          if (box.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          // Mengambil data dari box dan membalik urutannya agar yang terbaru di atas
+          final notifications = box.values.toList().reversed.toList();
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: notifications.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              // Konversi data dari Hive ke Map agar bisa dibaca widget
+              final item = Map<String, String>.from(notifications[index]);
+              return _buildNotificationCard(item);
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -63,7 +49,7 @@ class NotificationsScreen extends StatelessWidget {
     IconData icon;
     Color color;
 
-    // Logika pemilihan ikon berdasarkan tipe
+    // Logika pemilihan ikon tetap sama agar UI konsisten
     switch (item['type']) {
       case 'cert':
         icon = Icons.card_membership_rounded;
@@ -89,7 +75,7 @@ class NotificationsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -101,7 +87,7 @@ class NotificationsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.01),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),
@@ -112,7 +98,7 @@ class NotificationsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['title']!,
+                  item['title'] ?? "Pemberitahuan",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
@@ -120,12 +106,12 @@ class NotificationsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  item['desc']!,
+                  item['desc'] ?? "",
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  item['time']!,
+                  item['time'] ?? "Baru saja",
                   style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
                 ),
               ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../event_model.dart';
 import '../main.dart';
 import 'detail_event_screen.dart';
+import 'notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   // <--- Ganti jadi StatefulWidget
@@ -45,12 +46,21 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           actions: [
             IconButton(
-              onPressed: () {},
               icon: const Icon(
-                Icons.notifications_none_rounded,
-                color: Color(0xFF0F172A),
+                Icons.notifications_none_rounded, // Logo lonceng di pojok kanan
+                color: Colors.black,
               ),
+              onPressed: () {
+                // PERBAIKAN: Tambahkan navigasi ini
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationsScreen(),
+                  ),
+                );
+              },
             ),
+            const SizedBox(width: 8), // Biasanya ada sedikit spasi di pinggir
           ],
         ),
 

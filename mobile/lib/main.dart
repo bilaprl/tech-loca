@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
+// Import Screens
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/explore_screen.dart';
@@ -10,40 +13,25 @@ import 'package:mobile/services/notification_service.dart';
 import 'services/ticket_service.dart';
 
 void main() async {
-  // 1. WAJIB: Pastikan sistem Flutter siap sebelum inisialisasi Supabase
+  // 1. WAJIB: Pastikan sistem Flutter siap sebelum inisialisasi
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 2. Inisialisasi sistem penyimpanan lokal (Hive)
+  await Hive.initFlutter();
+
+  // 3. Inisialisasi Service Notifikasi dan Tiket
   await NotificationService.init();
   await TicketService.init();
 
-  runApp(const MyApp());
-
-  // 2. Inisialisasi Supabase dengan data dari temanmu
+  // 4. Inisialisasi Supabase
   await Supabase.initialize(
     url: 'https://cgyhcgneljqmmcwsravj.supabase.co',
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNneWhjZ25lbGpxbW1jd3NyYXZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NDMxNTUsImV4cCI6MjA5NDAxOTE1NX0.zgs6DROpp5brUe_4YIqpUn6DqmfIVLRE2S11LUZ_ITw',
   );
 
+  // 5. HANYA PANGGIL runApp SATU KALI DI PALING AKHIR
   runApp(const TechLocaApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'TechLoca',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF6366F1),
-      ),
-      // Ganti 'Container()' dengan halaman login atau dashboard admin kamu
-      home: const AdminDashboardScreen(),
-    );
-  }
 }
 
 // REMOTE CONTROL UNTUK PINDAH TAB
@@ -64,7 +52,11 @@ class TechLocaApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Montserrat',
       ),
-      home: const SplashScreen(),
+      // CARA GANTI HALAMAN UNTUK TESTING:
+      // Jika ingin melihat halaman Peserta, gunakan: const SplashScreen()
+      // Jika ingin melihat halaman Admin, gunakan: const AdminDashboardScreen()
+      //home: const SplashScreen(),
+      home: const AdminDashboardScreen(),
     );
   }
 }
